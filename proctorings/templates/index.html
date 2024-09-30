@@ -14,13 +14,18 @@
             margin: 0;
             background-color: #f4f4f4;
         }
-        .login-container {
+        .container {
+            display: flex;
             background-color: #fff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            text-align: center;
+            width: 700px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .login-container, .webcam-container {
+            width: 45%;
         }
         h2 {
             margin-bottom: 20px;
@@ -51,29 +56,150 @@
         button:hover {
             background-color: #45a049;
         }
-        .error-message {
-            color: red;
-            margin-top: 10px;
+        video, img {
+            width: 100%;
+            border-radius: 5px;
         }
+        .take-photo-btn {
+            margin-top: 10px;
+            background-color: #2196F3;
+        }
+        .take-photo-btn:hover {
+            background-color: #0b7dda;
+        }
+        .info-message {
+            font-size: 14px;
+            color: #0066cc;
+            margin-bottom: 20px;
+        }
+
+        .custom-button {
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .custom-button:hover {
+            background-color: #0b7dda;
+        }
+
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
-        <form method="post" action="{% url 'login' %}">
-            {% csrf_token %}
-            <label for="username">Email:</label>
-            <input type="text" id="username" name="username" required><br><br>
-            
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required><br><br>
-            
-            <button type="submit">Login</button>
-        </form>
+    <div class="container">
+        <!-- Manual Login Form -->
+        <div class="login-container">
+            <h2>Login</h2>
 
-        {% if form.errors %}
-            <p class="error-message">Invalid login details. Please try again.</p>
-        {% endif %}
+            <!-- Info message about Gmail being default username/password -->
+            <p class="info-message">Your Gmail address before @ sign is your default username and password.</p>
+
+            <form id="login-form" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label for="username">Email:</label>
+                <input type="text" id="username" name="email" required><br><br>
+
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br><br>
+
+                <!-- Hidden input to store the captured photo -->
+                <input type="hidden" id="captured_photo_input" name="captured_photo" />
+
+                <button type="submit">Login</button>
+            </form>
+
+            {% if form.errors %}
+                <p class="error-message">Invalid email or password.</p>
+            {% endif %}
+        </div>
+
+        <!-- Webcam Feed -->
+        <div class="webcam-container">
+            <h2>Live Video Feed</h2>
+            <!-- Stream video feed from backend -->
+            <img id="webcam-stream" src="{% url 'video_feed' %}" alt="Video Feed" />
+
+            <!-- Button to capture photo -->
+            <button id="take-photo-btn" class="custom-button">Take Photo</button>
+
+            <!-- Placeholder for captured photo -->
+            <canvas id="canvas" style="display:none;"></canvas>
+            <img id="captured-photo" style="display:none;" alt="Captured Photo" />
+
+        </div>
     </div>
+
+    <script>
+        // Function to get CSRF token from Django cookie
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrfToken = getCookie('csrftoken');
+
+        const webcamStream = document.getElementById('webcam-stream');
+        const takePhotoBtn = document.getElementById('take-photo-btn');
+        const canvas = document.getElementById('canvas');
+        const capturedPhoto = document.getElementById('captured-photo');
+        const capturedPhotoInput = document.getElementById('captured_photo_input');  // Hidden input to store base64 photo
+
+        takePhotoBtn.addEventListener('click', function() {
+            // Create a canvas to capture the current frame of the video stream
+            const context = canvas.getContext('2d');
+            canvas.width = webcamStream.width;
+            canvas.height = webcamStream.height;
+
+            // Draw the current frame from the webcam stream on the canvas
+            context.drawImage(webcamStream, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas image to a data URL
+            const dataURL = canvas.toDataURL('image/png');
+
+            // Set the captured photo source to the data URL
+            capturedPhoto.src = dataURL;
+            capturedPhoto.style.display = 'block';  // Display the captured photo
+            webcamStream.style.display = 'none';    // Hide the live webcam stream
+
+            // Set the hidden input value to the base64 image
+            capturedPhotoInput.value = dataURL;
+        });
+
+        function stopWebcamStream() {
+            // Send an AJAX request to stop the webcam stream
+            fetch('{% url "stop_video_feed" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken  // Include CSRF token
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Webcam stream stopped.');
+                } else {
+                    console.error('Failed to stop webcam stream.');
+                }
+            })
+            .catch(error => {
+                console.error('Error stopping webcam stream:', error);
+            });
+        }
+    </script>
 </body>
 </html>

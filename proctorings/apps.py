@@ -10,6 +10,6 @@ class ProctoringsConfig(AppConfig):
         from .views import save_sheet_data_to_model
 
         data = get_sheet_data()
-        print(data)  # This should print the data fetched from Google Sheets
+        #print(data)  # This should print the data fetched from Google Sheets
         save_sheet_data_to_model(data)
 

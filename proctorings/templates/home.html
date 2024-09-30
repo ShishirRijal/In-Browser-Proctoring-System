@@ -4,14 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        nav {
+            background-color: #333;
+            padding: 10px;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav ul li {
+            margin-right: 20px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+        }
+        nav ul li a:hover {
+            background-color: #575757;
+            border-radius: 5px;
+        }
+        .logout-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .logout-button:hover {
+            background-color: #d32f2f;
+        }
+        .container {
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Home Page</h1>
+    <!-- Navigation Bar -->
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li><a href="{% url 'about' %}">About</a></li>
+            <li><a href="{% url 'contact' %}">Contact</a></li>
+            <li>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+            </li>
+        </ul>
+    </nav>
 
-    <!-- Add a logout button -->
-    <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-    </form>
+    <!-- Main Content -->
+    <div class="container">
+        <h1>Welcome to the Home Page</h1>
+
+        <!-- Display the captured photo if it exists -->
+        {% if captured_photo %}
+            <h2>Your Captured Photo:</h2>
+            <img src="{{ captured_photo }}" alt="Captured Photo" />
+        {% endif %}
+    </div>
 </body>
 </html>

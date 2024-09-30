@@ -137,7 +137,7 @@ AUTHENTICATION_BACKENDS = (
 
 # Static files settings
 STATIC_URL = '/static/'
-
+STATICFILES_URLS= [BASE_DIR / 'static']
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/home/'  # Redirect to the home page after successful login
 LOGOUT_REDIRECT_URL = '/login/'  # Redirect to the login page after logout
