@@ -42,8 +42,8 @@ inbrowserproctoring/
 ├── media/
 │   ├── cvs/
 │   ├── photos/
-│   ├── object_detection_model/
-│   └── proctoring_systems/
+│── object_detection_model/
+│── proctoring_systems/
 ├── proctorings/
 │   ├── __pycache__/
 │   ├── management/
