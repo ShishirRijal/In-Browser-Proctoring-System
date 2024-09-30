@@ -18,7 +18,7 @@ from django.http import StreamingHttpResponse
 from .ml_models.face_recognitions import gen_frames
 from django.http import JsonResponse
 from .models import FormResponse, Question
-
+import threading
 
 import threading
 import cv2
@@ -252,183 +252,144 @@ def create_user_from_form_response(row):
         print(f"User with username {username} already exists.")
 
 
-def exam_view(request):
-    # If GET request, show exam questions
-    questions = Question.objects.all()
-    return render(request, "exam/exam_page.html", {"questions": questions})
-
-
-def result_view(request):
-    if request.method == "POST":
-        submitted_answers = request.POST  # Contains the user's submitted answers
-        correct_answers = 0
-        total_questions = Question.objects.count()
-
-        # Loop through questions and check answers
-        for i, question in enumerate(Question.objects.all(), start=1):
-            selected_answer = submitted_answers.get(f"q{i}")
-            if selected_answer == question.correct_answer:
-                correct_answers += 1
-
-        # Calculate score as percentage
-        score = (correct_answers / total_questions) * 100
-
-        # Render result page with score
-        return render(
-            request,
-            "exam/result.html",
-            {
-                "score": score,
-                "correct_answers": correct_answers,
-                "total_questions": total_questions,
-            },
-        )
-
-    return redirect("exam")
 
 @login_required(login_url='/')
-def exam_page(request):
+def exam_page(request, username):
     """Render the exam page and start the proctoring system."""
+    
     if request.method == 'POST':
-        username = request.POST.get('username')  # Assuming username is sent in POST request
-        log_file = f"{username}.log"
-        report_file = "report.html"
+       # Assuming username is sent in POST request
 
-        # Initialize variables
-        cap = cv2.VideoCapture(0)  # Open webcam
-        cheat_count = 0  # Total cheat count
-        consecutive_cheat_events = 0
-        alert_threshold = 3
-        report_interval = 300  # 5 minutes
-        next_report_time = time.time() + report_interval
-        real_time_alert = False
-        interval_logs = []  # Activity logs within each 5-minute interval
+        # Start the ML model in a background thread
+        def proctoring_system(username):
+            log_file = f"{username}.log"
+            report_file = "report.html"
 
-        # Function to log activity
-        def log_activity(log_file, activity):
-            with open(log_file, 'a') as file:
-                file.write(str(activity) + '\n')
+            # Initialize variables
+            cap = cv2.VideoCapture(0)  # Open webcam
+            cheat_count = 0  # Total cheat count
+            consecutive_cheat_events = 0
+            alert_threshold = 3
+            report_interval = 300  # 5 minutes
+            next_report_time = time.time() + report_interval
+            real_time_alert = False
+            interval_logs = []  # Activity logs within each 5-minute interval
 
-        # Function to determine cheating
-        def detect_cheating(detected_objects, head_pose, face_count, audio_detected):
-            nonlocal cheat_count, consecutive_cheat_events, real_time_alert
-            cheated = False
-            
-            if any(obj in ['cell phone', 'phone', 'book'] for obj, _ in detected_objects):
-                cheat_count += 1
-                consecutive_cheat_events += 1
-                cheated = True
-            
-            if head_pose in ['left', 'right', 'down']:
-                cheat_count += 1
-                consecutive_cheat_events += 1
-                cheated = True
-            
-            if face_count > 1:
-                cheat_count += 1
-                consecutive_cheat_events += 1
-                cheated = True
-            
-            if audio_detected == 'talking':
-                cheat_count += 1
-                consecutive_cheat_events += 1
-                cheated = True
-            
-            if not cheated:
-                consecutive_cheat_events = 0
-            
-            if consecutive_cheat_events >= alert_threshold:
-                real_time_alert = True
-            
-            return cheated
+            # Function to log activity
+            def log_activity(log_file, activity):
+                with open(log_file, 'a') as file:
+                    file.write(str(activity) + '\n')
 
-        # Threaded function for audio detection
-        def audio_thread_function():
+            # Function to determine cheating
+            def detect_cheating(detected_objects, head_pose, face_count, audio_detected):
+                nonlocal cheat_count, consecutive_cheat_events, real_time_alert
+                cheated = False
+
+                if any(obj in ['cell phone', 'phone', 'book'] for obj, _ in detected_objects):
+                    cheat_count += 1
+                    consecutive_cheat_events += 1
+                    cheated = True
+
+                if head_pose in ['left', 'right', 'down']:
+                    cheat_count += 1
+                    consecutive_cheat_events += 1
+                    cheated = True
+
+                if face_count > 1:
+                    cheat_count += 1
+                    consecutive_cheat_events += 1
+                    cheated = True
+
+                if audio_detected == 'talking':
+                    cheat_count += 1
+                    consecutive_cheat_events += 1
+                    cheated = True
+
+                if not cheated:
+                    consecutive_cheat_events = 0
+
+                if consecutive_cheat_events >= alert_threshold:
+                    real_time_alert = True
+
+                return cheated
+
+            # Threaded function for audio detection
+            def audio_thread_function():
+                while True:
+                    audio_status = audio_detection()
+                    print(f"Audio detection status: {audio_status}")
+                    time.sleep(5)  # Run every 5 seconds
+
+            # Start the audio detection thread
+            audio_thread = threading.Thread(target=audio_thread_function)
+            audio_thread.daemon = True
+            audio_thread.start()
+
+            # Initialize the report structure
+            with open(report_file, 'w') as report:
+                report.write("<html><head><title>Proctoring Report</title></head><body>")
+                report.write(f"<h1>Proctoring Report for {username}</h1>")
+
+            # Main detection loop
+            start_time = time.time()
+            model_interval = 10  # 10 seconds for each model to run
+            next_model_time = time.time() + model_interval
+
             while True:
-                audio_status = audio_detection()
-                print(f"Audio detection status: {audio_status}")
-                time.sleep(5)  # Run every 5 seconds
+                ret, frame = cap.read()
+                if not ret:
+                    print("Failed to capture frame from camera.")
+                    break
 
-        # Start the audio detection thread
-        audio_thread = threading.Thread(target=audio_thread_function)
-        audio_thread.daemon = True
-        audio_thread.start()
+                current_time_str = datetime.now().strftime("%H:%M:%S")
 
-        # Initialize the report structure
-        with open(report_file, 'w') as report:
-            report.write("<html><head><title>Proctoring Report</title></head><body>")
-            report.write(f"<h1>Proctoring Report for {username}</h1>")
+                # Run models sequentially
+                if time.time() >= next_model_time:
+                    face_count, faces = detectFace(frame)
+                    head_pose = head_pose_detection(faces, frame) if face_count > 0 else "No head detected."
+                    detected_objects = detectObject(frame)
+                    audio_status = 'talking' if 'talking' in detected_objects else 'No suspicious audio detected'
 
-        # Function to append logs to the report
-        def append_to_report(username, start_time, end_time, interval_logs, cheat_count, report_filename):
-            with open(report_filename, 'a') as report:
-                report.write(f"<h2>Activity Report for {username} from {start_time} to {end_time}</h2>")
-                report.write("<table border='1'><tr><th>Time</th><th>Status</th><th>Details</th></tr>")
-                for log in interval_logs:
-                    report.write(f"<tr><td>{log['time']}</td><td>{log['status']}</td><td>{log['details']}</td></tr>")
-                report.write("</table>")
-                report.write(f"<h3>Total Cheat Count in this Interval: {cheat_count}</h3>")
-                if real_time_alert:
-                    report.write("<h3 style='color:red;'>ALERT: Multiple Consecutive Suspicious Activities Detected</h3>")
-                report.write("<hr>")
-            interval_logs.clear()  # Clear logs after appending
+                    cheating = detect_cheating(detected_objects, head_pose, face_count, audio_status)
 
-        # Main detection loop
-        start_time = time.time()
-        model_interval = 10  # 10 seconds for each model to run
-        next_model_time = time.time() + model_interval
+                    # Log activity
+                    status = "Cheating Detected" if cheating else "No Cheating Detected"
+                    activity = {
+                        'time': current_time_str,
+                        'status': status,
+                        'details': f"Face Count: {face_count}, Detected Objects: {detected_objects}, Head Pose: {head_pose}, Audio: {audio_status}"
+                    }
+                    log_activity(log_file, activity)
 
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                print("Failed to capture frame from camera.")
-                break
+                    # Update next model time
+                    next_model_time += model_interval
 
-            current_time_str = datetime.now().strftime("%H:%M:%S")
+                # Break loop on exit
+                key = cv2.waitKey(1)
+                if key == 27:  # Press 'Esc' to exit
+                    break
 
-            # Run models sequentially
-            if time.time() >= next_model_time:
-                face_count, faces = detectFace(frame)
-                head_pose = head_pose_detection(faces, frame) if face_count > 0 else "No head detected."
-                detected_objects = detectObject(frame)
-                audio_status = 'talking' if 'talking' in detected_objects else 'No suspicious audio detected'
-                
-                cheating = detect_cheating(detected_objects, head_pose, face_count, audio_status)
+            cap.release()
+            cv2.destroyAllWindows()
 
-                # Log activity
-                status = "Cheating Detected" if cheating else "No Cheating Detected"
-                activity = {
-                    'time': current_time_str,
-                    'status': status,
-                    'details': f"Face Count: {face_count}, Detected Objects: {detected_objects}, Head Pose: {head_pose}, Audio: {audio_status}"
-                }
-                interval_logs.append(activity)
-                log_activity(log_file, activity)
+            # Finalize report with closing tags
+            with open(report_file, 'a') as report:
+                report.write("</body></html>")
 
-                # Update next model time
-                next_model_time += model_interval
+        # Start the proctoring system in a background thread
+        proctoring_thread = threading.Thread(target=proctoring_system, args=(username,))
+        proctoring_thread.start()
 
-            # Generate report every 5 minutes
-            if time.time() >= next_report_time:
-                report_end_time = datetime.now().strftime("%H:%M:%S")
-                append_to_report(username, start_time, report_end_time, interval_logs, cheat_count, report_file)
-                start_time = time.time()  # Reset start time for the next interval
-                next_report_time += report_interval
+        # Render the exam page immediately
+        return render(request, 'exam_page.html', {'username': username})
 
-            # Display the frame with annotations
-            cv2.imshow('Proctoring System', frame)
+    return render(request, 'exam_page.html', {'username': username})
 
-            key = cv2.waitKey(1)
-            if key == 27:  # Press 'Esc' to exit
-                break
+def submit_quiz(request):
+    return render(request,'submit_quiz.html')
 
-        cap.release()
-        cv2.destroyAllWindows()
-
-        # Finalize report with closing tags
-        with open(report_file, 'a') as report:
-            report.write("</body></html>")
-
-        return render(request, 'exam_page.html')
-
-    return render(request, 'exam_page.html')
+def generate_report(request, username):
+    print(f"Generating report for user: {username}")  # Debugging output
+    if request.method == 'POST':
+        # Your existing logic...
+        return render(request, 'report_generated.html', {'username': username})

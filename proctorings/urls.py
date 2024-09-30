@@ -11,9 +11,11 @@ urlpatterns = [
     path('stop_video_feed/', views.stop_video_feed, name='stop_video_feed'),
     path('about/', views.about, name='about'),
     path('contact/', views.contact, name='contact'),
-    path("home/exam.html/", views.exam_view, name="exam"),
-    path("exam/result/", views.result_view, name="results"),
+    # path("home/exam.html/", views.exam_view, name="exam"),
+    # path("exam/result/", views.result_view, name="results"),
     path('login/', auth_views.LoginView.as_view(template_name='index.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
-     path('exam/', views.exam_page, name='exam_page'),
+    path('exam/<str:username>/', views.exam_page, name='exam_page'),
+    path('submit_quiz/', views.submit_quiz, name= 'submit_quiz'),
+    path('generate_report/<str:username>/', views.generate_report, name= 'generate_report')
 ]

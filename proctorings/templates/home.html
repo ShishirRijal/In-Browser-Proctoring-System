@@ -128,8 +128,9 @@
         <a class="navbar-brand" href="{% url 'home' %}">Online Exam</a>
         
         <!-- Update 'Go to Exam' Link to Submit a Form -->
-        <form method="POST" action="{% url 'exam_page' %}" class="d-inline">
+        <form method="POST" action="{% url 'exam_page' username=username %}" class="d-inline">
             {% csrf_token %}
+            <input type="hidden" name="username" value="{{ username }}">
             <button type="submit" class="navbar-brand btn btn-link text-white p-0">Go to Exam</button>
         </form>
 
@@ -232,7 +233,7 @@
         <div class="row mb-4">
             <div class="col-12 text-center">
                 <h1>Welcome to the Online Exam</h1>
-                <h3>You are logged in as <strong>joshirabindra2058</strong></h3>
+                <h3>You are logged in as <strong>{{ username }}</strong></h3> <!-- Use the username context variable -->
             </div>
         </div>
 
