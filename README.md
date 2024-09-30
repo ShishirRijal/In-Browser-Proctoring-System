@@ -36,7 +36,7 @@ An advanced web-based proctoring system for secure online examinations, integrat
 ## 📁 Project Structure
 
 ```
-inbrowserp/
+inbrowserproctoring/
 ├── .myenv/
 ├── logs/
 ├── media/
