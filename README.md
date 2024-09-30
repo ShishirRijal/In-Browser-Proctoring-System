@@ -110,7 +110,3 @@ inbrowserproctoring/
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome! Feel free to check [issues page](https://github.com/yourusername/in-browser-proctoring-system/issues).
-
-## 📄 License
-
-This project is [MIT](https://choosealicense.com/licenses/mit/) licensed.
