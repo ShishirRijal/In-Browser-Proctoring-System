@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Page</title>
+    <style>
+        /* Styling for the exam page */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #2E8B57;
+        }
+
+        .quiz-container {
+            margin-top: 20px;
+        }
+
+        .question {
+            margin-bottom: 15px;
+        }
+
+        .options input {
+            margin-right: 10px;
+        }
+
+        .submit-btn, .report-btn {
+            background-color: #2E8B57;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover, .report-btn:hover {
+            background-color: #245d43;
+        }
+
+        /* Webcam feed container */
+        #webcam-container {
+            width: 640px;
+            height: 480px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            background-color: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exam</h1>
+
+        <!-- Webcam feed -->
+        <div id="webcam-container">
+            <video id="webcam" autoplay playsinline></video>
+        </div>
+
+        <!-- Quiz form -->
+        <form method="POST" action="{% url 'submit_quiz' %}">
+            {% csrf_token %}
+            <div class="quiz-container">
+                {% for quiz in quizzes %}
+                <div class="question">
+                    <p>{{ quiz.question }}</p>
+                    <div class="options">
+                        {% for option in quiz.options %}
+                        <label>
+                            <input type="radio" name="quiz_{{ forloop.counter }}" value="{{ option }}">
+                            {{ option }}
+                        </label><br>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="submit-btn">Submit</button>
+        </form>
+
+        <!-- Button to generate report -->
+        <form method="POST" action="{% url 'generate_report' username %}">
+            {% csrf_token %}
+            <button type="submit" class="report-btn">Generate Proctoring Report</button>
+        </form>
+    </div>
+
+    <script>
+        // Access the webcam and display the feed
+        const video = document.getElementById('webcam');
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    video.srcObject = stream;
+                    video.play();
+                });
+        }
+    </script>
+</body>
+</html>

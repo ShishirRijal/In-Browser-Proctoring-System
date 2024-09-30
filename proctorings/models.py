@@ -12,3 +12,62 @@ class FormResponse(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Subject(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+
+
+class Question(models.Model):
+    subject = models.ForeignKey(
+        Subject, on_delete=models.CASCADE, related_name="questions"
+    )
+    text = models.TextField()
+
+    # Four options for each question
+    option_a = models.CharField(max_length=255)
+    option_b = models.CharField(max_length=255)
+    option_c = models.CharField(max_length=255)
+    option_d = models.CharField(max_length=255)
+
+    # Correct answer field
+    correct_answer = models.CharField(
+        max_length=1,
+        choices=[
+            ("A", "Option A"),
+            ("B", "Option B"),
+            ("C", "Option C"),
+            ("D", "Option D"),
+        ],
+    )
+
+    def __str__(self):
+        return self.text
+
+
+class Exam(models.Model):
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, related_name="exams")
+    questions = models.ManyToManyField(Question, related_name="exams")
+    duration_minutes = models.PositiveIntegerField()
+    date = models.DateTimeField()
+
+    def __str__(self):
+        return f"Exam for {self.subject.name} on {self.date.strftime('%Y-%m-%d')}"
+    
+
+
+class CheatingLog(models.Model):
+    username = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    face_count = models.IntegerField()
+    detected_objects = models.TextField()
+    head_pose = models.CharField(max_length=100)
+    gaze_direction = models.CharField(max_length=100)
+    cheating_count = models.IntegerField()
+
+    def __str__(self):
+        return f"{self.username} - {self.timestamp}"
+    

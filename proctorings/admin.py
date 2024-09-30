@@ -4,13 +4,16 @@ from .models import FormResponse
 
 @admin.register(FormResponse)
 class FormResponseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'timestamp', 'photo_tag', 'cv_link')  # Display name, email, timestamp, photo, and CV
+    list_display = ('name', 'address', 'email', 'timestamp','feedback', 'photo_tag', 'cv_link')  # Display name, email, timestamp, photo, and CV
     search_fields = ('name', 'email')
     list_filter = ('timestamp',)
 
     def photo_tag(self, obj):
         if obj.photo:
-            return format_html('<img src="{}" style="width: 50px; height:50px;" />'.format(obj.photo.url))
+            return format_html(
+                '<a href="{}" target="_blank">View Photo</a>',
+                obj.photo.url, obj.photo.url
+            )
         return "No Photo"
 
     def cv_link(self, obj):

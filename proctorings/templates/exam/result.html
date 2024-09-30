@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Results</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .result-card {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .card-title {
+            color: #007bff;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+        }
+
+        .score-text {
+            font-size: 1.4rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .percentage-text {
+            font-size: 3rem;
+            color: #28a745;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .try-again-btn {
+            background-color: #007bff;
+            color: #fff;
+            font-size: 1.25rem;
+            padding: 15px 30px;
+            border-radius: 15px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .try-again-btn:hover {
+            background-color: #A020F0;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="result-card">
+                    <h1 class="card-title">Exam Results</h1>
+                    <p class="score-text">You scored <strong>{{ correct_answers }}</strong> out of <strong>{{ total_questions }}</strong></p>
+                    <p class="percentage-text">{{ score }}%</p>
+                    <a href="{% url 'exam' %}" class="btn try-again-btn">Try Again</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,10 @@
+{'time': '00:10:24', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.9078171253204346)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:10:35', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.9096985459327698)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:10:44', 'status': 'Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('cell phone', 0.9062676429748535), ('person', 0.7256494164466858), ('person', 0.5535613894462585)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:10:55', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.6128479838371277)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:11:04', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.7977971434593201)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:11:15', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.8918073773384094)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:11:38', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.8857955932617188)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:11:40', 'status': 'Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.9054355621337891), ('cell phone', 0.6390801072120667)], Head Pose: No head detected., Audio: No suspicious audio detected"}
+{'time': '00:11:45', 'status': 'No Cheating Detected', 'details': "Face Count: 1, Detected Objects: [('person', 0.5381842255592346)], Head Pose: -1, Audio: No suspicious audio detected"}
+{'time': '00:11:55', 'status': 'No Cheating Detected', 'details': "Face Count: 0, Detected Objects: [('person', 0.8120913505554199)], Head Pose: No head detected., Audio: No suspicious audio detected"}

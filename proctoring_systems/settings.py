@@ -141,3 +141,6 @@ STATICFILES_URLS= [BASE_DIR / 'static']
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/home/'  # Redirect to the home page after successful login
 LOGOUT_REDIRECT_URL = '/login/'  # Redirect to the login page after logout
+
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'

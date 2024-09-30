@@ -4,36 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
+        /* Body Background and Global Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            background-color: #f0f4f8; /* Light blueish background */
         }
-        nav {
-            background-color: #333;
-            padding: 10px;
+
+        /* Navbar Customization */
+        .navbar {
+            height: 70px; /* Increased height */
         }
-        nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+
+        .navbar-brand, .navbar-nav .nav-link {
+            font-weight: bold;
+            color: #ffffff !important; /* White text color for navbar */
+            padding: 10px 20px; /* Added padding to navbar items */
         }
-        nav ul li {
-            margin-right: 20px;
+
+        .navbar-dark .navbar-nav .nav-link:hover {
+            color: #ffcc00 !important; /* Gold color on hover */
         }
-        nav ul li a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 15px;
-        }
-        nav ul li a:hover {
-            background-color: #575757;
-            border-radius: 5px;
-        }
+
+        /* Logout Button */
         .logout-button {
             background-color: #f44336;
             color: white;
@@ -42,39 +41,246 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         .logout-button:hover {
             background-color: #d32f2f;
         }
+
+        /* Container */
         .container {
             padding: 20px;
+        }
+
+        /* User Info and Form Response Styling */
+        .user-info-list, .form-response-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        .user-info-list li, .form-response-card {
+            padding: 10px;
+            background-color: #f8f9fa;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+        }
+
+        .captured-photo img, .form-response-photo img {
+            width: 100%;
+            height: auto;
+            max-height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .form-response-card {
+            border: 1px solid #007bff;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .left-content {
+            flex: 1;
+            max-width: 55%; /* Left side takes 55% of the width */
+            margin-right: 5%;
+        }
+
+        .right-content {
+            flex: 0 0 35%; /* Right side takes up 35% of the width */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* Align to the right */
+            gap: 20px; /* Space between photos */
+        }
+
+        /* Photo Box Styling */
+        .photo-box {
+            text-align: center;
+            width: 100%;
+        }
+
+        .photo-box img {
+            width: 50%; /* Reduces the photo size to 50% */
+            height: auto; /* Keeps the aspect ratio intact */
+        }
+
+        .photo-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        /* Extra Styling */
+        h4 {
+            margin-bottom: 15px;
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav>
-        <ul>
-            <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="{% url 'about' %}">About</a></li>
-            <li><a href="{% url 'contact' %}">Contact</a></li>
-            <li>
-                <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="logout-button">Logout</button>
-                </form>
-            </li>
-        </ul>
-    </nav>
+
+ <!-- Bootstrap Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'home' %}">Online Exam</a>
+        
+        <!-- Update 'Go to Exam' Link to Submit a Form -->
+        <form method="POST" action="{% url 'exam_page' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="navbar-brand btn btn-link text-white p-0">Go to Exam</button>
+        </form>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <!-- Other links remain the same -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userInfoDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        View User Information
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="userInfoDropdown">
+                        <li>
+                            <div class="dropdown-item">
+                                <h6>User Information</h6>
+                                <div id="userInfoContent">
+                                    {% if user_info %}
+                                        <ul class="user-info-list">
+                                            {% for field, value in user_info.items %}
+                                                <li><strong>{{ field }}:</strong> {{ value }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        <div class="alert alert-warning">
+                                            No user information found.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+                
+                <!-- Form Responses Dropdown -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="formResponsesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        View Form Responses
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="formResponsesDropdown">
+                        <li>
+                            <div class="dropdown-item">
+                                <h6>Form Responses</h6>
+                                <div id="formResponsesContent">
+                                    {% if form_responses %}
+                                        <div class="row">
+                                            {% for response in form_responses %}
+                                                <div class="col-12 mb-3">
+                                                    <div class="card form-response-card">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">{{ response.name }}</h5>
+                                                            <p class="card-text"><strong>Address:</strong> {{ response.address }}</p>
+                                                            <p class="card-text"><strong>Email:</strong> {{ response.email }}</p>
+                                                            <p class="card-text"><strong>Timestamp:</strong> {{ response.timestamp }}</p>
+                                                            <p class="card-text"><strong>Feedback:</strong> {{ response.feedback }}</p>
+                                                            <p class="card-text"><strong>Photo:</strong> {% if response.photo %}<a href="{{ response.photo.url }}" target="_blank">View Photo</a>{% else %}No Photo{% endif %}</p>
+                                                            <p class="card-text"><strong>CV:</strong> {% if response.cv %}<a href="{{ response.cv.url }}" target="_blank">View CV</a>{% else %}No CV{% endif %}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-info">
+                                            No form responses found.
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'home' %}">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'about' %}">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'contact' %}">Contact</a>
+                </li>
+                <li class="nav-item">
+                    <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
 
     <!-- Main Content -->
-    <div class="container">
-        <h1>Welcome to the Home Page</h1>
+    <div class="container mt-4">
+        <!-- Welcome Section (Full Width) -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1>Welcome to the Online Exam</h1>
+                <h3>You are logged in as <strong>joshirabindra2058</strong></h3>
+            </div>
+        </div>
 
-        <!-- Display the captured photo if it exists -->
-        {% if captured_photo %}
-            <h2>Your Captured Photo:</h2>
-            <img src="{{ captured_photo }}" alt="Captured Photo" />
-        {% endif %}
+        <!-- Main Content Section (Two Columns: Left and Right) -->
+        <div class="main-content">
+            <!-- Left Column: Terms and Conditions -->
+            <div class="left-content">
+                <h4>Terms and Conditions</h4>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in justo vel dui vehicula tempor. Sed auctor, lectus in venenatis feugiat, erat ex gravida nisi, vel ullamcorper tortor eros eget dui.</p>
+                <p>Mauris laoreet neque nec velit egestas, a feugiat ex fermentum. Nam ut magna ut turpis dictum feugiat.</p>
+            </div>
+
+            <!-- Right Column: Photos (Recognized and Actual) -->
+            <div class="right-content">
+                <!-- Recognized Photo -->
+                <div class="photo-box">
+                    <h4 class="photo-title">Recognized Photo</h4>
+                    <div class="captured-photo">
+                        {% if captured_photo %}
+                            <img src="{{ captured_photo }}" alt="Captured Photo" class="img-fluid" />
+                        {% else %}
+                            <div class="alert alert-warning">No captured photo found.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actual Photo -->
+                <div class="photo-box">
+                    <h4 class="photo-title">Actual Photo</h4>
+                    {% if form_responses %}
+                        {% for response in form_responses %}
+                            <div class="form-response-photo">
+                                {% if response.photo %}
+                                    <img src="{{ response.photo.url }}" alt="Form Response Photo" class="img-fluid" />
+                                {% else %}
+                                    <div>No Photo</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info">No form responses found.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,205 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>In-Browser Proctoring Login</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f4f7;
             margin: 0;
-            background-color: #f4f4f4;
+            padding-top: 80px;
         }
-        .container {
-            display: flex;
-            background-color: #fff;
+
+        .navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            background-color: #343a40;
             padding: 20px;
+        }
+
+        .navbar-brand,
+        .nav-link {
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .navbar .nav-link:hover {
+            color: #f0f0f0 !important;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 700px;
-            justify-content: space-between;
-            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 70%;
+            max-width: 900px;
+            margin: 0 auto;
         }
-        .login-container, .webcam-container {
-            width: 45%;
-        }
+
         h2 {
             margin-bottom: 20px;
             color: #333;
+            font-weight: bold;
+            font-size: 24px;
         }
+
         label {
             font-size: 14px;
             color: #555;
         }
-        input[type="text"], input[type="password"] {
+
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin-top: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
         }
+
         button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
+            padding: 12px;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
         }
+
         button:hover {
-            background-color: #45a049;
+            background-color: #0056b3;
         }
-        video, img {
-            width: 100%;
-            border-radius: 5px;
-        }
-        .take-photo-btn {
-            margin-top: 10px;
-            background-color: #2196F3;
-        }
-        .take-photo-btn:hover {
-            background-color: #0b7dda;
-        }
+
         .info-message {
             font-size: 14px;
-            color: #0066cc;
+            color: #dc3545;
             margin-bottom: 20px;
+        }
+
+        .webcam-container,
+        .form-container {
+            margin-top: 20px;
+            position: relative; /* Added to position captured photo */
+        }
+
+        video,
+        img {
+            width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        #captured-photo {
+            position: absolute; /* Positioning captured photo over webcam feed */
+            top: 0;
+            left: 0;
+            width: 20%; /* Match webcam feed size */
+            height: 20%; /* Match webcam feed size */
+            border-radius: 5px;
+            display: none; /* Hide until captured */
+            z-index: 10; /* Ensure it appears above the webcam feed */
+        }
+
+        .take-photo-btn {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+        }
+
+        .take-photo-btn:hover {
+            background-color: #218838;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
         }
 
         .custom-button {
             padding: 10px 20px;
-            background-color: #2196F3;
+            background-color: #6c757d;
             color: white;
             border: none;
             border-radius: 5px;
             font-size: 16px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
         .custom-button:hover {
-            background-color: #0b7dda;
+            background-color: #5a6268;
         }
 
+        .recognized-names {
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+        }
+
+        #about-section {
+        position: fixed; /* Fixes the position to the viewport */
+        top: 60px; /* Adjust this value to match the height of your navbar */
+        left: 0; /* Aligns it to the left */
+        width: 100%; /* Makes it take the full width */
+        height: calc(100% - 60px); /* Makes it take the full height minus navbar height */
+        background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+        color: #333; /* Dark text color for contrast */
+        padding: 60px; /* Padding for inner content */
+        overflow-y: auto; /* Allows scrolling if content overflows */
+        z-index: 1; /* Ensures it's above other content */
+        display: none; /* Initially hidden; will show when toggled */
+    }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <!-- Manual Login Form -->
-        <div class="login-container">
-            <h2>Login</h2>
 
-            <!-- Info message about Gmail being default username/password -->
-            <p class="info-message">Your Gmail address before @ sign is your default username and password.</p>
-
-            <form id="login-form" method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                <label for="username">Email:</label>
-                <input type="text" id="username" name="email" required><br><br>
-
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required><br><br>
-
-                <!-- Hidden input to store the captured photo -->
-                <input type="hidden" id="captured_photo_input" name="captured_photo" />
-
-                <button type="submit">Login</button>
-            </form>
-
-            {% if form.errors %}
-                <p class="error-message">Invalid email or password.</p>
-            {% endif %}
-        </div>
-
-        <!-- Webcam Feed -->
-        <div class="webcam-container">
-            <h2>Live Video Feed</h2>
-            <!-- Stream video feed from backend -->
-            <img id="webcam-stream" src="{% url 'video_feed' %}" alt="Video Feed" />
-
-            <!-- Button to capture photo -->
-            <button id="take-photo-btn" class="custom-button">Take Photo</button>
-
-            <!-- Placeholder for captured photo -->
-            <canvas id="canvas" style="display:none;"></canvas>
-            <img id="captured-photo" style="display:none;" alt="Captured Photo" />
-
+<!-- Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Proctoring System</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="contact-nav">Contact Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" id="about-nav">About</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-primary text-white" href="#" id="login-nav">Login</a>
+                </li>
+            </ul>
         </div>
     </div>
+</nav>
 
-    <script>
-        // Function to get CSRF token from Django cookie
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
+<!-- Content Container -->
+<div class="container" id="main-content">
+    <!-- About Section (Visible by Default) -->
+    <div id="about-section">
+        <h2>About Our Proctoring System</h2>
+        <p>This is an advanced proctoring system that uses state-of-the-art face recognition technology to monitor
+            students during online exams. It ensures integrity and fairness by keeping track of student activities
+            during the examination process.</p>
+    </div>
+
+    <!-- Login Section (Hidden by Default) -->
+    <div id="login-section" style="display:none;">
+        <div class="row">
+            <!-- Manual Login Form -->
+            <div class="col-md-6 form-container">
+                <h2>Student Login</h2>
+
+                <p class="info-message">Your Gmail address before @ sign is your default username and password.</p>
+
+                <div id="error-message" class="info-message" style="display: none;"></div> <!-- Error message area -->
+
+                <form id="login-form" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Email:</label>
+                        <input type="text" id="username" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password:</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+
+                    <input type="hidden" id="captured_photo_input" name="captured_photo">
+                </form>
+            </div>
+
+            <!-- Webcam Feed from Server -->
+            <div class="col-md-6 webcam-container">
+                <h2>Face Recognition</h2>
+                <img id="webcam-stream" src="{% url 'video_feed' %}" alt="Video Feed" class="img-fluid" /> <!-- Server-side video stream -->
+                <canvas id="canvas" style="display:none;"></canvas>
+                <img id="captured-photo" style="display:none;" alt="Captured Photo" />
+            </div>
+        </div>
+
+        <!-- Button container for login and capture -->
+        <div class="button-container">
+            <button type="submit" class="btn btn-primary" id="login-btn">Login</button>
+            <button id="take-photo-btn" class="btn take-photo-btn custom-button">Take Photo</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const aboutSection = document.getElementById('about-section');
+    const loginSection = document.getElementById('login-section');
+    const aboutNav = document.getElementById('about-nav');
+    const loginNav = document.getElementById('login-nav');
+
+    // Show "About" content by default
+    aboutSection.style.display = 'block';
+    loginSection.style.display = 'none';
+
+    // Event listener for "About" in Navbar
+    aboutNav.addEventListener('click', function () {
+        aboutSection.style.display = 'block';
+        loginSection.style.display = 'none';
+    });
+
+    // Event listener for "Login" in Navbar
+    loginNav.addEventListener('click', function () {
+        aboutSection.style.display = 'none';
+        loginSection.style.display = 'block';
+    });
+
+    // Handle taking a photo
+    const img = document.getElementById('webcam-stream');
+    const takePhotoBtn = document.getElementById('take-photo-btn');
+    const canvas = document.getElementById('canvas');
+    const capturedPhoto = document.getElementById('captured-photo');
+    const capturedPhotoInput = document.getElementById('captured_photo_input');
+    const errorMessage = document.getElementById('error-message');
+
+    let photoCaptured = false; // Variable to track if the photo has been captured
+
+    takePhotoBtn.addEventListener('click', function () {
+        // Set canvas dimensions to the image element's size
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        // Draw the image onto the canvas
+        const context = canvas.getContext('2d');
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Get the image data URL from the canvas
+        const photoData = canvas.toDataURL('image/png');
+
+        // Set the captured photo's src to the image data
+        capturedPhoto.src = photoData;
+        capturedPhoto.style.display = 'block'; // Show the captured photo
+
+        // Store the image data in the hidden input for form submission
+        capturedPhotoInput.value = photoData;
+        photoCaptured = true; // Set photo captured to true
+        errorMessage.style.display = 'none'; // Hide any error message
+    });
+
+    // Event listener for the login button
+    document.getElementById('login-btn').addEventListener('click', function (event) {
+        if (!photoCaptured) {
+            event.preventDefault(); // Prevent form submission
+            errorMessage.textContent = "Please capture your photo before logging in."; // Show error message
+            errorMessage.style.display = 'block'; // Display the error message
+        } else {
+            document.getElementById('login-form').submit(); // Submit the form if photo is captured
         }
+    });
+</script>
 
-        const csrfToken = getCookie('csrftoken');
-
-        const webcamStream = document.getElementById('webcam-stream');
-        const takePhotoBtn = document.getElementById('take-photo-btn');
-        const canvas = document.getElementById('canvas');
-        const capturedPhoto = document.getElementById('captured-photo');
-        const capturedPhotoInput = document.getElementById('captured_photo_input');  // Hidden input to store base64 photo
-
-        takePhotoBtn.addEventListener('click', function() {
-            // Create a canvas to capture the current frame of the video stream
-            const context = canvas.getContext('2d');
-            canvas.width = webcamStream.width;
-            canvas.height = webcamStream.height;
-
-            // Draw the current frame from the webcam stream on the canvas
-            context.drawImage(webcamStream, 0, 0, canvas.width, canvas.height);
-
-            // Convert the canvas image to a data URL
-            const dataURL = canvas.toDataURL('image/png');
-
-            // Set the captured photo source to the data URL
-            capturedPhoto.src = dataURL;
-            capturedPhoto.style.display = 'block';  // Display the captured photo
-            webcamStream.style.display = 'none';    // Hide the live webcam stream
-
-            // Set the hidden input value to the base64 image
-            capturedPhotoInput.value = dataURL;
-        });
-
-        function stopWebcamStream() {
-            // Send an AJAX request to stop the webcam stream
-            fetch('{% url "stop_video_feed" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken  // Include CSRF token
-                },
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log('Webcam stream stopped.');
-                } else {
-                    console.error('Failed to stop webcam stream.');
-                }
-            })
-            .catch(error => {
-                console.error('Error stopping webcam stream:', error);
-            });
-        }
-    </script>
 </body>
+
 </html>
