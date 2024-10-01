@@ -12,6 +12,11 @@
 
 An advanced web-based proctoring system for secure online examinations, integrating object detection, face recognition, head pose estimation, and background audio monitoring.
 
+<img width="1469" alt="Screenshot 2024-10-02 at 1 14 19 AM" src="https://github.com/user-attachments/assets/0544f4f7-5a1e-49f9-83a4-0f9f5c050b53">
+<img width="1471" alt="Screenshot 2024-10-02 at 1 15 24 AM" src="https://github.com/user-attachments/assets/88527c8c-835a-4990-b21d-dbe83166575b">
+
+
+
 ## 🚀 Features
 
 - 👤 Face recognition login
@@ -32,10 +37,6 @@ An advanced web-based proctoring system for secure online examinations, integrat
 - NumPy 1.26.4
 - Matplotlib 3.9.2
 - Seaborn 0.13.2
-
-<img width="1469" alt="Screenshot 2024-10-02 at 1 14 19 AM" src="https://github.com/user-attachments/assets/0544f4f7-5a1e-49f9-83a4-0f9f5c050b53">
-
-<img width="1471" alt="Screenshot 2024-10-02 at 1 15 24 AM" src="https://github.com/user-attachments/assets/88527c8c-835a-4990-b21d-dbe83166575b">
 
 
 ## 📁 Project Structure
